@@ -128,6 +128,7 @@ nxf_write_trace() {
     echo "nextflow.trace/v2"           > $trace_file
     echo "realtime=$wall_time"         >> $trace_file
     echo "%cpu=$ucpu"                  >> $trace_file
+    echo "n_instructions=$n_instructions"  >> $trace_file
     echo "rchar=${io_stat1[0]}"        >> $trace_file
     echo "wchar=${io_stat1[1]}"        >> $trace_file
     echo "syscr=${io_stat1[2]}"        >> $trace_file
@@ -144,6 +145,7 @@ nxf_trace_mac() {
 
     local end_millis=$(nxf_date)
     local wall_time=$((end_millis-start_millis))
+    local n_instructions=''
     local ucpu=''
     local io_stat1=('' '' '' '' '' '')
     nxf_write_trace
@@ -170,9 +172,10 @@ nxf_trace_linux() {
     local start_millis=$(nxf_date)
     ## capture error and kill mem watcher
     trap 'kill $mem_proc' ERR
-    
+
+
     ## run task script
-    {{trace_cmd}} &
+    perf record -o .perf -q -e instructions {{trace_cmd}} &
     local task=$!
 
     ## run mem stat
@@ -182,6 +185,9 @@ nxf_trace_linux() {
 
     wait $task
 
+    ## perf_4.19 report
+    perf report -i .perf --stdio >> ../../../tracefile_instructions.txt
+    local n_instructions=$(perf report -i .perf --stdio | grep 'Event count' | grep -o '[0-9]\+')
     ## compute cpu usage time for processes
     local end_millis=$(nxf_date)
     local tot_time1=$(grep '^cpu ' /proc/stat | awk '{sum=$2+$3+$4+$5+$6+$7+$8+$9; printf "%.0f",sum}')
@@ -200,6 +206,7 @@ nxf_trace_linux() {
     echo "nextflow.trace/v2"           > $trace_file
     echo "realtime=$wall_time"         >> $trace_file
     echo "%cpu=$ucpu"                  >> $trace_file
+    echo "n_instructions=$n_instructions"  >> $trace_file
     echo "rchar=${io_stat1[0]}"        >> $trace_file
     echo "wchar=${io_stat1[1]}"        >> $trace_file
     echo "syscr=${io_stat1[2]}"        >> $trace_file

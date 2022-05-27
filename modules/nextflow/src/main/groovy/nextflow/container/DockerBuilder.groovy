@@ -155,6 +155,8 @@ class DockerBuilder extends ContainerBuilder<DockerBuilder> {
         if( name )
             result << '--name ' << name << ' '
 
+        result << '--cap-add SYS_ADMIN '
+
         if( registry )
             result << registry
 

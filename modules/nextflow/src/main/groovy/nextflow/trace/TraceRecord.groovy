@@ -77,6 +77,7 @@ class TraceRecord implements Serializable {
             duration:   'time',
             realtime:   'time',
             '%cpu':     'perc',     // -- ps field '%cpu'
+            'n_instructions':     'str',
             '%mem':     'perc',     // -- ps field '%mem'
             rss:        'mem',      // -- ps field 'rss'
             vmem:       'mem',      // -- ps field 'vsize'
