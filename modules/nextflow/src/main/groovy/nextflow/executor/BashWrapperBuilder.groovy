@@ -270,6 +270,13 @@ class BashWrapperBuilder {
         binding.stderr_file = TaskRun.CMD_ERRFILE
         binding.trace_file = TaskRun.CMD_TRACE
 
+        binding.trace_input_files = inputFiles.collect {
+            it.key
+        }.join(" ");
+
+        binding.trace_output_files = outputFiles.join(" ");
+
+
         binding.trace_cmd = getTraceCommand(interpreter)
         binding.launch_cmd = getLaunchCommand(interpreter,env)
         binding.stage_cmd = getStageCommand()

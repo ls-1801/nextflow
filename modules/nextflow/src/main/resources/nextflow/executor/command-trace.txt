@@ -173,6 +173,8 @@ nxf_trace_linux() {
     ## capture error and kill mem watcher
     trap 'kill $mem_proc' ERR
 
+    ### record input file size
+    stat -L --printf="%n:%s\n" {{trace_input_files}} >> input_files.txt || true
 
     ## run task script
     perf record -o .perf -q -e instructions {{trace_cmd}} &
@@ -184,10 +186,13 @@ nxf_trace_linux() {
     local mem_proc=$!
 
     wait $task
+    stat --printf="%n:%s\n" {{trace_output_files}} >> output_files.txt || true
 
     ## perf_4.19 report
     perf report -i .perf --stdio >> ../../../tracefile_instructions.txt
     local n_instructions=$(perf report -i .perf --stdio | grep 'Event count' | grep -o '[0-9]\+')
+
+
     ## compute cpu usage time for processes
     local end_millis=$(nxf_date)
     local tot_time1=$(grep '^cpu ' /proc/stat | awk '{sum=$2+$3+$4+$5+$6+$7+$8+$9; printf "%.0f",sum}')
