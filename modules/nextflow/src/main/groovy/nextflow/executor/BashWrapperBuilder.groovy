@@ -270,6 +270,10 @@ class BashWrapperBuilder {
         binding.stderr_file = TaskRun.CMD_ERRFILE
         binding.trace_file = TaskRun.CMD_TRACE
 
+
+        binding.use_perf = usePerf
+        binding.use_strace = useStrace
+
         binding.trace_input_files = inputFiles.collect {
             it.key
         }.join(" ");

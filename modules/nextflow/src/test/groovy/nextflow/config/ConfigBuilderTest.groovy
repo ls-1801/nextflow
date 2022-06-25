@@ -778,6 +778,66 @@ class ConfigBuilderTest extends Specification {
 
     }
 
+    def 'should set session usePerf options' () {
+
+        given:
+        def env = [:]
+        def builder = [:] as ConfigBuilder
+
+        when:
+        def config = new ConfigObject()
+        builder.configRunOptions(config, env, new CmdRun())
+
+        then:
+        config.trace instanceof Map
+        !config.trace.enabled
+        !config.trace.file
+        !config.trace.usePerf
+        !config.trace.useStrace
+
+        when:
+        config = new ConfigObject()
+        builder.configRunOptions(config, env, new CmdRun(withTrace: 'some-file', withPerf: true))
+        then:
+        config.trace instanceof Map
+        config.trace.enabled
+        config.trace.file == 'some-file'
+        config.trace.usePerf
+
+        when:
+        config = new ConfigObject()
+        builder.configRunOptions(config, env, new CmdRun(withTrace: 'some-file', withStrace: true))
+        then:
+        config.trace instanceof Map
+        config.trace.enabled
+        config.trace.file == 'some-file'
+        config.trace.useStrace
+
+
+        when:
+        config = new ConfigObject()
+        builder.configRunOptions(config, env, new CmdRun(withPerf: true))
+        then:
+        def e1 = thrown(AbortOperationException)
+        e1.message == "Tracing needs to be enabled to use -with-perf"
+
+
+        when:
+        config = new ConfigObject()
+        builder.configRunOptions(config, env, new CmdRun(withStrace: true))
+        then:
+        def e2 = thrown(AbortOperationException)
+        e2.message == "Tracing needs to be enabled to use -with-strace"
+
+        when:
+        config = new ConfigObject()
+        builder.configRunOptions(config, env, new CmdRun(withTrace: 'some-file', withStrace: true, withPerf: true))
+        then:
+        def e3 = thrown(AbortOperationException)
+        e3.message == "Cannot use -with-strace and -with-perf at the same time"
+
+    }
+
     def 'should set session trace options' () {
 
         given:

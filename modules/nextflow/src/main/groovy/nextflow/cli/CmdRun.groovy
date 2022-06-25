@@ -163,6 +163,12 @@ class CmdRun extends CmdBase implements HubOptions {
     @Parameter(names = ['-with-trace'], description = 'Create processes execution tracing file')
     String withTrace
 
+    @Parameter(names = ['-with-perf'], description = 'record tasks with perf')
+    boolean withPerf
+
+    @Parameter(names = ['-with-strace'], description = 'record tasks with strace')
+    boolean withStrace
+
     @Parameter(names = ['-with-report'], description = 'Create processes execution html report')
     String withReport
 

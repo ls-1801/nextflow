@@ -177,7 +177,17 @@ nxf_trace_linux() {
     stat -L --printf="%n:%s\n" {{trace_input_files}} >> input_files.txt || true
 
     ## run task script
-    perf record -o .perf -q -e instructions {{trace_cmd}} &
+
+    if [ {{use_perf}} = true ]
+    then
+        perf record -o .perf -q -e instructions {{trace_cmd}} &
+    elif [ {{use_strace}} = true ]
+    then
+        strace -o .strace -ff -e read,write,open {{trace_cmd}} &
+    else
+        {{trace_cmd}} &
+    fi
+
     local task=$!
 
     ## run mem stat
@@ -188,10 +198,13 @@ nxf_trace_linux() {
     wait $task
     stat --printf="%n:%s\n" {{trace_output_files}} >> output_files.txt || true
 
-    ## perf_4.19 report
-    perf report -i .perf --stdio >> ../../../tracefile_instructions.txt
-    local n_instructions=$(perf report -i .perf --stdio | grep 'Event count' | grep -o '[0-9]\+')
-
+    if [ {{use_perf}} = true ]
+    then
+        perf report -i .perf --stdio >> ../../../tracefile_instructions.txt
+        local n_instructions=$(perf report -i .perf --stdio | grep 'Event count' | grep -o '[0-9]\+')
+    else
+        local n_instructions='n/a'
+    fi
 
     ## compute cpu usage time for processes
     local end_millis=$(nxf_date)

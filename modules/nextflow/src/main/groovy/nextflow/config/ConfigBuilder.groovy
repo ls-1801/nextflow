@@ -601,6 +601,23 @@ class ConfigBuilder {
                 config.trace.file = TraceFileObserver.DEF_FILE_NAME
         }
 
+        if( cmdRun.withPerf ) {
+            if( !(config.trace instanceof Map) || !config.trace.enabled )
+                throw new AbortOperationException("Tracing needs to be enabled to use -with-perf")
+            config.trace.usePerf = true;
+        }
+
+        if( cmdRun.withStrace ) {
+            if( !(config.trace instanceof Map) || !config.trace.enabled )
+                throw new AbortOperationException("Tracing needs to be enabled to use -with-strace")
+
+            if( config.trace.usePerf != null && config.trace.usePerf ) {
+                throw new AbortOperationException("Cannot use -with-strace and -with-perf at the same time")
+            }
+
+            config.trace.useStrace = true;
+        }
+
         // -- sets report report options
         if( cmdRun.withReport ) {
             if( !(config.report instanceof Map) )
