@@ -174,7 +174,7 @@ nxf_trace_linux() {
     trap 'kill $mem_proc' ERR
 
     ### record input file size
-    stat -L --printf="%n:%s\n" {{trace_input_files}} >> input_files.txt || true
+    stat -L --printf="%n:%s\n" $(eval "ls -1d {{trace_input_files}}" | uniq) >> {{trace_input_files_filename}} || true
 
     ## run task script
 
@@ -183,7 +183,7 @@ nxf_trace_linux() {
         perf record -o .perf -q -e instructions {{trace_cmd}} &
     elif [ {{use_strace}} = true ]
     then
-        strace -o .strace -ff -e read,write,open {{trace_cmd}} &
+        strace -o {{straceFile}} -y -ff -e read,write,open {{trace_cmd}} &
     else
         {{trace_cmd}} &
     fi
@@ -196,7 +196,7 @@ nxf_trace_linux() {
     local mem_proc=$!
 
     wait $task
-    stat --printf="%n:%s\n" {{trace_output_files}} >> output_files.txt || true
+    stat -L --printf="%n:%s\n" $(eval "ls -1d {{trace_output_files}}" | uniq) >> {{trace_output_files_filename}} || true
 
     if [ {{use_perf}} = true ]
     then

@@ -273,12 +273,17 @@ class BashWrapperBuilder {
 
         binding.use_perf = usePerf
         binding.use_strace = useStrace
+        if( useStrace ) {
+            binding.straceFile = workDir.resolve(TaskRun.CMD_STRACE)
+        }
 
         binding.trace_input_files = inputFiles.collect {
             it.key
         }.join(" ");
 
         binding.trace_output_files = outputFiles.join(" ");
+        binding.trace_input_files_filename = workDir.resolve(TaskRun.CMD_TRACE_INPUTS)
+        binding.trace_output_files_filename = workDir.resolve(TaskRun.CMD_TRACE_OUTPUTS)
 
 
         binding.trace_cmd = getTraceCommand(interpreter)
