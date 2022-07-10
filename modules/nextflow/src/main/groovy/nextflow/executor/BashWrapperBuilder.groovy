@@ -273,9 +273,7 @@ class BashWrapperBuilder {
 
         binding.use_perf = usePerf
         binding.use_strace = useStrace
-        if( useStrace ) {
-            binding.straceFile = workDir.resolve(TaskRun.CMD_STRACE)
-        }
+        binding.straceFile = workDir.resolve(TaskRun.CMD_STRACE)
 
         binding.trace_input_files = inputFiles.collect {
             it.key

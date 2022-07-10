@@ -55,6 +55,7 @@ class TraceFileObserver implements TraceObserver {
             'duration',
             'realtime',
             'n_instructions',
+            'n_cycles',
             '%cpu',
             'peak_rss',
             'peak_vmem',

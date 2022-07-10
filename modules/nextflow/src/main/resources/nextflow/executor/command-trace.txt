@@ -129,6 +129,7 @@ nxf_write_trace() {
     echo "realtime=$wall_time"         >> $trace_file
     echo "%cpu=$ucpu"                  >> $trace_file
     echo "n_instructions=$n_instructions"  >> $trace_file
+    echo "n_cycles=$n_cycles"  >> $trace_file
     echo "rchar=${io_stat1[0]}"        >> $trace_file
     echo "wchar=${io_stat1[1]}"        >> $trace_file
     echo "syscr=${io_stat1[2]}"        >> $trace_file
@@ -146,6 +147,7 @@ nxf_trace_mac() {
     local end_millis=$(nxf_date)
     local wall_time=$((end_millis-start_millis))
     local n_instructions=''
+    local n_cycles=''
     local ucpu=''
     local io_stat1=('' '' '' '' '' '')
     nxf_write_trace
@@ -174,16 +176,17 @@ nxf_trace_linux() {
     trap 'kill $mem_proc' ERR
 
     ### record input file size
-    stat -L --printf="%n:%s\n" $(eval "ls -1d {{trace_input_files}}" | uniq) >> {{trace_input_files_filename}} || true
 
+    find $(eval "ls -1d {{trace_input_files}}" | uniq | xargs realpath | tr '\n' ' ') -type f | tr '\n' ' ' | xargs stat -L --printf="%n:%s\n" > {{trace_input_files_filename}} || true
+    eval "ls -1d {{trace_input_files}}" | xargs realpath | uniq | xargs -I files find files -type f | xargs stat -L --printf="%n:%s\n" > {{trace_input_files_filename}} || true
     ## run task script
 
     if [ {{use_perf}} = true ]
     then
-        perf record -o .perf -q -e instructions {{trace_cmd}} &
+        perf record -o .perf -q -e instructions,cycles {{trace_cmd}} &
     elif [ {{use_strace}} = true ]
     then
-        strace -o {{straceFile}} -y -ff -e read,write,open {{trace_cmd}} &
+        strace -o {{straceFile}} -tt -T -y -ff {{trace_cmd}} &
     else
         {{trace_cmd}} &
     fi
@@ -196,14 +199,16 @@ nxf_trace_linux() {
     local mem_proc=$!
 
     wait $task
-    stat -L --printf="%n:%s\n" $(eval "ls -1d {{trace_output_files}}" | uniq) >> {{trace_output_files_filename}} || true
-
+    eval "ls -1d {{trace_output_files}}" | xargs realpath | uniq | xargs -I files find files -type f | xargs stat -L --printf="%n:%s\n" > {{trace_output_files_filename}} || true
     if [ {{use_perf}} = true ]
     then
         perf report -i .perf --stdio >> ../../../tracefile_instructions.txt
-        local n_instructions=$(perf report -i .perf --stdio | grep 'Event count' | grep -o '[0-9]\+')
+        events=($(perf report -i .perf --stdio | grep 'Event count' | grep -o '[0-9]\+'))
+        local n_instructions=${events[0]}
+        local n_cycles=${events[1]}
     else
         local n_instructions='n/a'
+        local n_cycles='n/a'
     fi
 
     ## compute cpu usage time for processes
@@ -225,6 +230,7 @@ nxf_trace_linux() {
     echo "realtime=$wall_time"         >> $trace_file
     echo "%cpu=$ucpu"                  >> $trace_file
     echo "n_instructions=$n_instructions"  >> $trace_file
+    echo "n_cycles=$n_cycles"  >> $trace_file
     echo "rchar=${io_stat1[0]}"        >> $trace_file
     echo "wchar=${io_stat1[1]}"        >> $trace_file
     echo "syscr=${io_stat1[2]}"        >> $trace_file
