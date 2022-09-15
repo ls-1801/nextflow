@@ -1,3 +1,15 @@
+# This is a Fork
+This Fork added two commandline arguments that can be added to the kuberun executor. Currently you can chose only one of them and the -with-trace flags needs to enabled.
+
+## -with-strace 
+will attach Strace to the .command.sh script. Strace is configured to follow forks and log into separate .strace.PID files which are unstaged into the working directory
+
+## -with-perf 
+will attach perf to the .command.sh scrip and count instruction and cycle hardware events. Perf will create .perf inside the working directory. Additionally the number of instructions and cycles are added to the trace.txt file.
+
+in addition all input and output files will be tracked inside .input.trace and .output.trace files within the working directory
+
+
 ![Nextflow logo](https://github.com/nextflow-io/trademark/blob/master/nextflow2014_no-bg.png)
 
 *"Dataflow variables are spectacularly expressive in concurrent programming"*
